@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.pytest_cache/
+
+# C++
+*.o
+*.out
+*.exe
+build/
+cmake-build-*/
+gmon.out
+
+# IDE
+.vscode/
+.idea/
+.cursor/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project-specific
+*.log
+test_data/
+
