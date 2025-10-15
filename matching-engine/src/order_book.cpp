@@ -17,15 +17,15 @@ void OrderBook::add_order(const Order& order) {
         auto it = std::prev(level.orders.end());
         order_index_[order.id] = it;
         
-        // 4. Update cached quantity
-        level.total_quantity += order.quantity;
+        // 4. Update cached quantity (use remaining_quantity for partially filled orders)
+        level.total_quantity += order.remaining_quantity;
     } else {
         // Same logic for asks
         auto& level = asks_[order.price];
         level.orders.push_back(order);
         auto it = std::prev(level.orders.end());
         order_index_[order.id] = it;
-        level.total_quantity += order.quantity;
+        level.total_quantity += order.remaining_quantity;
     }
 }
 
@@ -129,5 +129,34 @@ std::list<Order>* OrderBook::get_orders_at_price(Side side, Price price) {
         if (it == asks_.end()) return nullptr;
         return &(it->second.orders);
     }
+}
+
+Quantity OrderBook::get_available_liquidity(Side side, Price limit_price) const {
+    // Calculate total liquidity available within price limit
+    Quantity total = 0.0;
+    
+    if (side == Side::SELL) {
+        // For sell orders, check asks (counter-side)
+        // Iterate through ask levels from best (lowest) up to limit price
+        for (const auto& [price, level] : asks_) {
+            if (price <= limit_price) {
+                total += level.total_quantity;
+            } else {
+                break;  // Asks are sorted ascending, so we can stop here
+            }
+        }
+    } else {
+        // For buy orders, check bids (counter-side)
+        // Iterate through bid levels from best (highest) down to limit price
+        for (const auto& [price, level] : bids_) {
+            if (price >= limit_price) {
+                total += level.total_quantity;
+            } else {
+                break;  // Bids are sorted descending, so we can stop here
+            }
+        }
+    }
+    
+    return total;
 }
 

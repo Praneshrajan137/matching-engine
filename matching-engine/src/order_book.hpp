@@ -101,6 +101,14 @@ public:
      */
     const std::list<Order>* get_orders_at_price(Side side, Price price) const;
     std::list<Order>* get_orders_at_price(Side side, Price price);
+    
+    /**
+     * @brief Get total available liquidity up to a price limit
+     * @param side BUY or SELL (counter-side to check)
+     * @param limit_price Maximum price for BUY orders, minimum price for SELL orders
+     * @return Total quantity available within price limit
+     */
+    Quantity get_available_liquidity(Side side, Price limit_price) const;
 
 private:
     // Bid side: Sorted in descending order (best bid = highest price)

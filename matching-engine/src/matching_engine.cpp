@@ -91,25 +91,184 @@ void MatchingEngine::match_market_order(Order order, OrderBook& book) {
 }
 
 void MatchingEngine::match_limit_order(Order order, OrderBook& book) {
-    // TODO: Implement full limit order matching (marketable vs. resting)
-    // For now, just rest the order on the book (non-marketable case)
-    book.add_order(order);
+    // Determine counter-side
+    Side counter_side = (order.side == Side::BUY) ? Side::SELL : Side::BUY;
+    
+    // Try to match while order has remaining quantity
+    while (order.remaining_quantity > 0) {
+        // Get best price on counter-side
+        auto best_price = (counter_side == Side::BUY) 
+            ? book.get_best_bid() 
+            : book.get_best_ask();
+        
+        if (!best_price.has_value()) {
+            // No counter-side liquidity, rest order on book
+            break;
+        }
+        
+        // Check if limit order is marketable
+        bool is_marketable = false;
+        if (order.side == Side::BUY) {
+            // Buy limit is marketable if willing to pay >= best ask
+            is_marketable = (order.price >= best_price.value());
+        } else {
+            // Sell limit is marketable if willing to accept <= best bid
+            is_marketable = (order.price <= best_price.value());
+        }
+        
+        if (!is_marketable) {
+            // Price limit prevents matching, rest on book
+            break;
+        }
+        
+        // Get orders at best price level
+        auto* orders_at_price = book.get_orders_at_price(counter_side, best_price.value());
+        if (!orders_at_price || orders_at_price->empty()) {
+            break;
+        }
+        
+        // Match against first order in FIFO queue
+        Order& resting_order = orders_at_price->front();
+        
+        // Determine fill quantity
+        Quantity fill_qty = std::min(order.remaining_quantity, resting_order.remaining_quantity);
+        
+        // Generate trade event
+        Trade trade = generate_trade(resting_order, order, fill_qty);
+        trade_history_.push_back(trade);
+        
+        // Update remaining quantities
+        order.remaining_quantity -= fill_qty;
+        resting_order.remaining_quantity -= fill_qty;
+        
+        // If resting order fully filled, remove it
+        if (resting_order.remaining_quantity == 0) {
+            book.cancel_order(resting_order.id);
+        }
+    }
+    
+    // If order has remaining quantity, rest it on the book
+    if (order.remaining_quantity > 0) {
+        book.add_order(order);
+    }
 }
 
 void MatchingEngine::match_ioc_order(Order order, OrderBook& book) {
-    (void)order;
-    (void)book;
+    // IOC (Immediate-Or-Cancel) is like a limit order but never rests
+    // Same matching logic as limit, but remainder is cancelled instead of rested
+    
+    Side counter_side = (order.side == Side::BUY) ? Side::SELL : Side::BUY;
+    
+    while (order.remaining_quantity > 0) {
+        auto best_price = (counter_side == Side::BUY) 
+            ? book.get_best_bid() 
+            : book.get_best_ask();
+        
+        if (!best_price.has_value()) {
+            break;  // No liquidity, cancel remainder
+        }
+        
+        // Check if marketable
+        bool is_marketable = false;
+        if (order.side == Side::BUY) {
+            is_marketable = (order.price >= best_price.value());
+        } else {
+            is_marketable = (order.price <= best_price.value());
+        }
+        
+        if (!is_marketable) {
+            break;  // Not marketable, cancel remainder
+        }
+        
+        auto* orders_at_price = book.get_orders_at_price(counter_side, best_price.value());
+        if (!orders_at_price || orders_at_price->empty()) {
+            break;
+        }
+        
+        Order& resting_order = orders_at_price->front();
+        Quantity fill_qty = std::min(order.remaining_quantity, resting_order.remaining_quantity);
+        
+        Trade trade = generate_trade(resting_order, order, fill_qty);
+        trade_history_.push_back(trade);
+        
+        order.remaining_quantity -= fill_qty;
+        resting_order.remaining_quantity -= fill_qty;
+        
+        if (resting_order.remaining_quantity == 0) {
+            book.cancel_order(resting_order.id);
+        }
+    }
+    
+    // IOC never rests - any unfilled quantity is cancelled
+    // (order.remaining_quantity is simply discarded)
 }
 
 void MatchingEngine::match_fok_order(Order order, OrderBook& book) {
-    (void)order;
-    (void)book;
+    // FOK (Fill-Or-Kill): Check if can fill completely, if yes execute, if no cancel
+    
+    // Pre-check: Can this order be completely filled?
+    if (!can_fill_completely(order, book)) {
+        // Cannot fill completely, cancel entire order (no partial fills)
+        return;
+    }
+    
+    // Can fill completely, execute like IOC
+    Side counter_side = (order.side == Side::BUY) ? Side::SELL : Side::BUY;
+    
+    while (order.remaining_quantity > 0) {
+        auto best_price = (counter_side == Side::BUY) 
+            ? book.get_best_bid() 
+            : book.get_best_ask();
+        
+        if (!best_price.has_value()) {
+            break;
+        }
+        
+        bool is_marketable = false;
+        if (order.side == Side::BUY) {
+            is_marketable = (order.price >= best_price.value());
+        } else {
+            is_marketable = (order.price <= best_price.value());
+        }
+        
+        if (!is_marketable) {
+            break;
+        }
+        
+        auto* orders_at_price = book.get_orders_at_price(counter_side, best_price.value());
+        if (!orders_at_price || orders_at_price->empty()) {
+            break;
+        }
+        
+        Order& resting_order = orders_at_price->front();
+        Quantity fill_qty = std::min(order.remaining_quantity, resting_order.remaining_quantity);
+        
+        Trade trade = generate_trade(resting_order, order, fill_qty);
+        trade_history_.push_back(trade);
+        
+        order.remaining_quantity -= fill_qty;
+        resting_order.remaining_quantity -= fill_qty;
+        
+        if (resting_order.remaining_quantity == 0) {
+            book.cancel_order(resting_order.id);
+        }
+    }
+    
+    // FOK should fill completely (we pre-checked), so remaining should be 0
+    // If not, something went wrong with can_fill_completely check
 }
 
 bool MatchingEngine::can_fill_completely(const Order& order, const OrderBook& book) const {
-    (void)order;
-    (void)book;
-    return false;
+    // Check if order can be completely filled without executing
+    // Use helper method to get total available liquidity within price limit
+    
+    Side counter_side = (order.side == Side::BUY) ? Side::SELL : Side::BUY;
+    
+    // Get total liquidity available within our price limit
+    Quantity available = book.get_available_liquidity(counter_side, order.price);
+    
+    // Can fill if available >= needed
+    return (available >= order.remaining_quantity);
 }
 
 Trade MatchingEngine::generate_trade(const Order& maker, Order& taker, Quantity fill_qty) {
