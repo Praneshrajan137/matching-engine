@@ -32,3 +32,21 @@ target_link_libraries(order_book_tests
 include(GoogleTest)
 gtest_discover_tests(order_book_tests)
 
+# Matching engine tests
+add_executable(
+  matching_engine_tests
+  test_matching_engine.cpp
+)
+
+target_include_directories(matching_engine_tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+target_link_libraries(matching_engine_tests
+    matching_engine_lib
+    gtest_main
+    gmock_main
+)
+
+gtest_discover_tests(matching_engine_tests)
+

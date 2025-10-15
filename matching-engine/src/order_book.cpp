@@ -105,3 +105,29 @@ size_t OrderBook::price_level_count(Side side) const {
     return (side == Side::BUY) ? bids_.size() : asks_.size();
 }
 
+const std::list<Order>* OrderBook::get_orders_at_price(Side side, Price price) const {
+    // O(log M) - binary search in map
+    if (side == Side::BUY) {
+        auto it = bids_.find(price);
+        if (it == bids_.end()) return nullptr;
+        return &(it->second.orders);
+    } else {
+        auto it = asks_.find(price);
+        if (it == asks_.end()) return nullptr;
+        return &(it->second.orders);
+    }
+}
+
+std::list<Order>* OrderBook::get_orders_at_price(Side side, Price price) {
+    // O(log M) - binary search in map
+    if (side == Side::BUY) {
+        auto it = bids_.find(price);
+        if (it == bids_.end()) return nullptr;
+        return &(it->second.orders);
+    } else {
+        auto it = asks_.find(price);
+        if (it == asks_.end()) return nullptr;
+        return &(it->second.orders);
+    }
+}
+

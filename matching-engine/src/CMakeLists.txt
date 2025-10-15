@@ -1,6 +1,7 @@
 # Source library for matching engine
 add_library(matching_engine_lib
     order_book.cpp
+    matching_engine.cpp
 )
 
 target_include_directories(matching_engine_lib PUBLIC

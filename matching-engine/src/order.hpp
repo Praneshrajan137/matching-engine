@@ -34,6 +34,7 @@ enum class OrderType {
  */
 struct Order {
     OrderID id;
+    std::string symbol;  // Trading symbol (e.g., "BTC-USDT")
     Side side;
     OrderType type;
     Price price;  // Only used for LIMIT orders
@@ -43,9 +44,24 @@ struct Order {
     
     Order() = default;
     
+    // Constructor with symbol
+    Order(OrderID id_, std::string symbol_, Side side_, OrderType type_, Price price_, 
+          Quantity quantity_, Timestamp timestamp_)
+        : id(id_)
+        , symbol(symbol_)
+        , side(side_)
+        , type(type_)
+        , price(price_)
+        , quantity(quantity_)
+        , remaining_quantity(quantity_)
+        , timestamp(timestamp_)
+    {}
+    
+    // Convenience constructor defaulting to BTC-USDT
     Order(OrderID id_, Side side_, OrderType type_, Price price_, 
           Quantity quantity_, Timestamp timestamp_)
         : id(id_)
+        , symbol("BTC-USDT")
         , side(side_)
         , type(type_)
         , price(price_)

@@ -92,6 +92,15 @@ public:
      * TODO: Implement via TDD
      */
     size_t price_level_count(Side side) const;
+    
+    /**
+     * @brief Get reference to orders at specific price level (for matching)
+     * @param side BUY or SELL
+     * @param price Price level to query
+     * @return Pointer to list of orders at that price, or nullptr if level doesn't exist
+     */
+    const std::list<Order>* get_orders_at_price(Side side, Price price) const;
+    std::list<Order>* get_orders_at_price(Side side, Price price);
 
 private:
     // Bid side: Sorted in descending order (best bid = highest price)
