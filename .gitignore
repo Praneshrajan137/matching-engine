@@ -18,6 +18,7 @@ gmon.out
 .vscode/
 .idea/
 .cursor/
+!.cursor/agents/
 
 # OS
 .DS_Store
