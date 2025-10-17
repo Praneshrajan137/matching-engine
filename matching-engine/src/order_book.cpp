@@ -160,3 +160,25 @@ Quantity OrderBook::get_available_liquidity(Side side, Price limit_price) const 
     return total;
 }
 
+OrderBook::L2Data OrderBook::get_l2_depth(size_t depth) const {
+    L2Data result;
+    
+    // Extract top N bid levels (bids_ is sorted descending, so iterate from best)
+    size_t count = 0;
+    for (const auto& [price, level] : bids_) {
+        if (count >= depth) break;
+        result.bids.emplace_back(price, level.total_quantity);
+        count++;
+    }
+    
+    // Extract top N ask levels (asks_ is sorted ascending, so iterate from best)
+    count = 0;
+    for (const auto& [price, level] : asks_) {
+        if (count >= depth) break;
+        result.asks.emplace_back(price, level.total_quantity);
+        count++;
+    }
+    
+    return result;
+}
+

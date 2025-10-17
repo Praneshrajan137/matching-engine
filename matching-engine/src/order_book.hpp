@@ -109,6 +109,23 @@ public:
      * @return Total quantity available within price limit
      */
     Quantity get_available_liquidity(Side side, Price limit_price) const;
+    
+    /**
+     * @brief Get L2 order book depth (top N price levels)
+     * @param depth Number of levels to retrieve (default 10)
+     * @return Vector of [price, quantity] pairs for bids and asks
+     * 
+     * Returns format:
+     * {
+     *   bids: [[60000.0, 1.5], [59999.0, 2.0], ...],
+     *   asks: [[60001.0, 0.8], [60002.0, 1.2], ...]
+     * }
+     */
+    struct L2Data {
+        std::vector<std::pair<Price, Quantity>> bids;
+        std::vector<std::pair<Price, Quantity>> asks;
+    };
+    L2Data get_l2_depth(size_t depth = 10) const;
 
 private:
     // Bid side: Sorted in descending order (best bid = highest price)

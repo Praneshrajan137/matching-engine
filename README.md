@@ -1,8 +1,11 @@
 # goquant - High-Performance Matching Engine
 
-**Status:** 🚧 In Development (Day 0/5)  
+**Status:** 🚧 In Development (Day 3/5 COMPLETE ✅)  
 **Interview Assignment for:** [Company Name]  
 **Deadline:** 2025-10-19
+
+> **Day 3 Update:** All code complete! Awaiting Python/Redis installation for testing.  
+> See `DAY3_IMPLEMENTATION_COMPLETE.md` for details.
 
 ## 🎯 Project Goal
 
@@ -19,27 +22,34 @@ Build a high-performance cryptocurrency matching engine implementing:
 2. **Matching Engine** (C++) - High-performance order book
 3. **Market Data** (Python) - WebSocket market data feed
 
-## 📋 Quick Start (5-Minute Setup)
+## 📋 Quick Start (Windows)
 
-```bash
-# Clone repository
-git clone [your-repo-url]
-cd goquant
+### Prerequisites
+1. **Python 3.11+** - https://www.python.org/downloads/
+2. **Redis** - See `REDIS_SETUP_WINDOWS.md` (Memurai recommended)
+3. **Visual Studio Build Tools** - For C++ compilation
 
-# Install Python dependencies
-cd order-gateway && pip install -r requirements.txt
-cd ../market-data && pip install -r requirements.txt
+### Automated Setup
+```powershell
+# Setup Python environments
+.\scripts\setup_python_env.ps1
 
-# Build C++ matching engine
-cd ../matching-engine
-mkdir build && cd build
+# Build C++ engine
+cd matching-engine\build
 cmake ..
-make
-./tests/matching_engine_tests  # Run tests
+cmake --build . --config Debug
 
-# Start services
-# [Instructions will be added as services are built]
+# Run tests
+cd ..\order-gateway
+.venv\Scripts\Activate.ps1
+pytest tests/ -v
+
+# Start all services
+.\scripts\start_all_services.ps1
 ```
+
+### Manual Setup
+See `DAY3_IMPLEMENTATION_COMPLETE.md` for detailed instructions.
 
 ## 📚 Documentation
 
@@ -63,11 +73,17 @@ make test
 ## 📊 Current Progress
 
 **Day 0:** Foundation setup ✅  
-**Day 1:** C++ order book implementation ⏳  
-**Day 2:** Matching algorithm ⏳  
-**Day 3:** API services ⏳  
+**Day 1:** C++ order book implementation ✅ (10/10 tests passing)  
+**Day 2:** Matching algorithm ✅ (30/30 tests passing)  
+**Day 3:** API services ✅ **CODE COMPLETE** (awaiting Python/Redis install)  
 **Day 4:** Integration & performance testing ⏳  
 **Day 5:** Documentation & video demo ⏳
+
+### Day 3 Deliverables ✅
+- ✅ Order Gateway (FastAPI + Redis + 9 tests)
+- ✅ Market Data Service (WebSocket + Redis pub/sub)
+- ✅ C++ Engine Runner (event loop with JSON utils)
+- ✅ Helper scripts (setup, test, run)
 
 ## 📝 Development Workflow
 

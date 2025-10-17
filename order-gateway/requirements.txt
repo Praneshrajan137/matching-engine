@@ -1,2 +1,20 @@
 # Order Gateway Dependencies
+# Day 3: Python API Services with Redis IPC
 
+# Core Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# Data Validation
+pydantic==2.4.2
+
+# Redis Client
+redis==5.0.1
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.1  # For TestClient
+
+# Development
+python-dotenv==1.0.0  # Environment variables
