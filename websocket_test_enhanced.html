@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"="width=device-width, initial-scale=1.0">
+    <title>GoQuant Market Data - Complete Feed</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 30px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 15px 40px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-connect {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-connect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+        }
+
+        .btn-disconnect {
+            background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+            color: white;
+        }
+
+        .btn-clear {
+            background: linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%);
+            color: white;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .status {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .status-connected {
+            background: #38ef7d;
+            color: #0d5c3d;
+        }
+
+        .status-disconnected {
+            background: #ff6a00;
+            color: white;
+        }
+
+        .stats {
+            display: flex;
+            gap: 30px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .bbo-display {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .bbo-item {
+            text-align: center;
+            padding: 15px 30px;
+            border-radius: 8px;
+        }
+
+        .bbo-bid {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+        }
+
+        .bbo-ask {
+            background: #ffebee;
+            border: 2px solid #f44336;
+        }
+
+        .bbo-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .bbo-price {
+            font-size: 2em;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .panel {
+            background: #fafafa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .panel-header {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #667eea;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .order-book {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .book-side {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .book-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .bids-title {
+            color: #4caf50;
+        }
+
+        .asks-title {
+            color: #f44336;
+        }
+
+        .level {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .level-price {
+            font-weight: bold;
+        }
+
+        .messages {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .message {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-trade {
+            border-left-color: #38ef7d;
+        }
+
+        .message-bbo {
+            border-left-color: #ffc107;
+        }
+
+        .message-l2 {
+            border-left-color: #2196f3;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .message-type {
+            color: #667eea;
+            text-transform: uppercase;
+            font-size: 0.9em;
+        }
+
+        .message-time {
+            color: #999;
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 GoQuant Market Data Feed</h1>
+            <p>Complete Market Data: Trades + BBO + L2 Depth</p>
+        </div>
+
+        <div class="controls">
+            <div class="btn-group">
+                <button id="connectBtn" class="btn-connect" onclick="connect()">Connect</button>
+                <button id="disconnectBtn" class="btn-disconnect" onclick="disconnect()" disabled>Disconnect</button>
+                <button class="btn-clear" onclick="clearMessages()">Clear</button>
+            </div>
+        </div>
+
+        <div class="status">
+            <div class="status-row">
+                <div>
+                    <span id="statusBadge" class="status-badge status-disconnected">DISCONNECTED</span>
+                </div>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="tradeCount">0</div>
+                        <div class="stat-label">Trades</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="bboCount">0</div>
+                        <div class="stat-label">BBO Updates</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="l2Count">0</div>
+                        <div class="stat-label">L2 Updates</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bbo-display" id="bboDisplay">
+                <div class="bbo-item bbo-bid">
+                    <div class="bbo-label">Best Bid</div>
+                    <div class="bbo-price" id="bestBid" style="color: #4caf50;">--</div>
+                </div>
+                <div class="bbo-item bbo-ask">
+                    <div class="bbo-label">Best Ask</div>
+                    <div class="bbo-price" id="bestAsk" style="color: #f44336;">--</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="panel">
+                <div class="panel-header">📊 L2 Order Book Depth</div>
+                <div class="order-book">
+                    <div class="book-side">
+                        <div class="book-title bids-title">BIDS (Buy Orders)</div>
+                        <div id="bidLevels">No data...</div>
+                    </div>
+                    <div class="book-side">
+                        <div class="book-title asks-title">ASKS (Sell Orders)</div>
+                        <div id="askLevels">No data...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">💬 Message Feed</div>
+                <div class="messages" id="messages">
+                    <div style="text-align: center; color: #999; padding: 50px;">
+                        Click "Connect" to start receiving market data...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let tradeCount = 0;
+        let bboCount = 0;
+        let l2Count = 0;
+
+        function connect() {
+            try {
+                ws = new WebSocket('ws://localhost:8001/ws/market-data');
+
+                ws.onopen = () => {
+                    console.log('✅ Connected to Market Data Feed');
+                    updateStatus(true);
+                    addMessage('System', 'Connected to GoQuant Market Data Feed', 'connected');
+                };
+
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+
+                    if (data.type === 'trade') {
+                        tradeCount++;
+                        document.getElementById('tradeCount').textContent = tradeCount;
+                        addMessage('Trade', JSON.stringify(data.data, null, 2), 'trade');
+                    } 
+                    else if (data.type === 'bbo') {
+                        bboCount++;
+                        document.getElementById('bboCount').textContent = bboCount;
+                        updateBBO(data.data);
+                        addMessage('BBO', JSON.stringify(data.data, null, 2), 'bbo');
+                    } 
+                    else if (data.type === 'l2_update') {
+                        l2Count++;
+                        document.getElementById('l2Count').textContent = l2Count;
+                        updateL2(data.data);
+                        addMessage('L2 Update', JSON.stringify(data.data, null, 2), 'l2');
+                    } 
+                    else {
+                        addMessage(data.type, JSON.stringify(data, null, 2), '');
+                    }
+                };
+
+                ws.onclose = () => {
+                    console.log('❌ Disconnected');
+                    updateStatus(false);
+                    addMessage('System', 'Disconnected from Market Data Feed', 'error');
+                };
+
+                ws.onerror = (error) => {
+                    console.error('⚠️ WebSocket error:', error);
+                    addMessage('Error', 'Connection error - is Market Data service running?', 'error');
+                };
+
+            } catch (error) {
+                addMessage('Error', 'Failed to connect: ' + error.message, 'error');
+            }
+        }
+
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+                updateStatus(false);
+            }
+        }
+
+        function updateStatus(connected) {
+            const statusBadge = document.getElementById('statusBadge');
+            const connectBtn = document.getElementById('connectBtn');
+            const disconnectBtn = document.getElementById('disconnectBtn');
+
+            if (connected) {
+                statusBadge.textContent = 'CONNECTED';
+                statusBadge.className = 'status-badge status-connected';
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+            } else {
+                statusBadge.textContent = 'DISCONNECTED';
+                statusBadge.className = 'status-badge status-disconnected';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+            }
+        }
+
+        function updateBBO(data) {
+            const bidEl = document.getElementById('bestBid');
+            const askEl = document.getElementById('bestAsk');
+
+            bidEl.textContent = data.bid || '--';
+            askEl.textContent = data.ask || '--';
+        }
+
+        function updateL2(data) {
+            const bidLevels = document.getElementById('bidLevels');
+            const askLevels = document.getElementById('askLevels');
+
+            // Render bids
+            if (data.bids && data.bids.length > 0) {
+                bidLevels.innerHTML = data.bids.map(([price, qty]) => `
+                    <div class="level">
+                        <span class="level-price" style="color: #4caf50;">${price}</span>
+                        <span>${qty}</span>
+                    </div>
+                `).join('');
+            } else {
+                bidLevels.innerHTML = '<div style="text-align:center; color:#999;">No bids</div>';
+            }
+
+            // Render asks
+            if (data.asks && data.asks.length > 0) {
+                askLevels.innerHTML = data.asks.map(([price, qty]) => `
+                    <div class="level">
+                        <span class="level-price" style="color: #f44336;">${price}</span>
+                        <span>${qty}</span>
+                    </div>
+                `).join('');
+            } else {
+                askLevels.innerHTML = '<div style="text-align:center; color:#999;">No asks</div>';
+            }
+        }
+
+        function addMessage(type, content, messageClass) {
+            const messagesDiv = document.getElementById('messages');
+            if (messagesDiv.querySelector('div[style*="center"]')) {
+                messagesDiv.innerHTML = '';
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message message-${messageClass}`;
+
+            const now = new Date().toLocaleTimeString();
+
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <span class="message-type">${type}</span>
+                    <span class="message-time">${now}</span>
+                </div>
+                <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: 'Courier New', monospace; font-size: 0.85em; overflow-x: auto;">
+                    <pre style="margin: 0;">${content}</pre>
+                </div>
+            `;
+
+            messagesDiv.insertBefore(messageDiv, messagesDiv.firstChild);
+            
+            // Keep only last 20 messages
+            while (messagesDiv.children.length > 20) {
+                messagesDiv.removeChild(messagesDiv.lastChild);
+            }
+        }
+
+        function clearMessages() {
+            document.getElementById('messages').innerHTML = '<div style="text-align: center; color: #999; padding: 50px;">Messages cleared...</div>';
+            tradeCount = 0;
+            bboCount = 0;
+            l2Count = 0;
+            document.getElementById('tradeCount').textContent = '0';
+            document.getElementById('bboCount').textContent = '0';
+            document.getElementById('l2Count').textContent = '0';
+        }
+    </script>
+</body>
+</html>
+

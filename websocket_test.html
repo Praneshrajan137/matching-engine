@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoQuant WebSocket Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 30px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 15px 40px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-connect {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-connect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+        }
+
+        .btn-disconnect {
+            background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+            color: white;
+        }
+
+        .btn-disconnect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(238, 9, 121, 0.4);
+        }
+
+        .btn-clear {
+            background: linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%);
+            color: white;
+        }
+
+        .btn-clear:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(63, 43, 150, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .status {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .status-connected {
+            background: #38ef7d;
+            color: #0d5c3d;
+        }
+
+        .status-disconnected {
+            background: #ff6a00;
+            color: white;
+        }
+
+        .stats {
+            display: flex;
+            gap: 30px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .messages {
+            padding: 30px;
+            max-height: 500px;
+            overflow-y: auto;
+            background: #fafafa;
+        }
+
+        .message {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .message-trade {
+            border-left-color: #38ef7d;
+        }
+
+        .message-connected {
+            border-left-color: #11998e;
+        }
+
+        .message-error {
+            border-left-color: #ee0979;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .message-type {
+            color: #667eea;
+            text-transform: uppercase;
+            font-size: 0.9em;
+        }
+
+        .message-time {
+            color: #999;
+            font-size: 0.85em;
+        }
+
+        .message-body {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+        }
+
+        .trade-highlight {
+            background: #fff9e6;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .trade-detail {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+
+        .trade-label {
+            color: #666;
+            font-weight: 600;
+        }
+
+        .trade-value {
+            color: #333;
+            font-weight: bold;
+        }
+
+        .no-messages {
+            text-align: center;
+            color: #999;
+            padding: 50px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 GoQuant WebSocket Test</h1>
+            <p>Real-time Market Data Feed</p>
+        </div>
+
+        <div class="controls">
+            <div class="btn-group">
+                <button id="connectBtn" class="btn-connect" onclick="connect()">Connect</button>
+                <button id="disconnectBtn" class="btn-disconnect" onclick="disconnect()" disabled>Disconnect</button>
+                <button class="btn-clear" onclick="clearMessages()">Clear Messages</button>
+            </div>
+        </div>
+
+        <div class="status">
+            <div>
+                <span id="statusBadge" class="status-badge status-disconnected">DISCONNECTED</span>
+            </div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="messageCount">0</div>
+                    <div class="stat-label">Messages</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="tradeCount">0</div>
+                    <div class="stat-label">Trades</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="messages" id="messages">
+            <div class="no-messages">Click "Connect" to start receiving market data...</div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let messageCount = 0;
+        let tradeCount = 0;
+
+        function connect() {
+            try {
+                ws = new WebSocket('ws://localhost:8001/ws/market-data');
+
+                ws.onopen = () => {
+                    console.log('✅ Connected to Market Data Feed');
+                    updateStatus(true);
+                    addSystemMessage('Connected to GoQuant Market Data Feed', 'connected');
+                };
+
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    messageCount++;
+                    document.getElementById('messageCount').textContent = messageCount;
+
+                    if (data.type === 'trade') {
+                        tradeCount++;
+                        document.getElementById('tradeCount').textContent = tradeCount;
+                        addTradeMessage(data.data);
+                    } else {
+                        addMessage(data);
+                    }
+                };
+
+                ws.onclose = () => {
+                    console.log('❌ Disconnected from Market Data Feed');
+                    updateStatus(false);
+                    addSystemMessage('Disconnected from Market Data Feed', 'error');
+                };
+
+                ws.onerror = (error) => {
+                    console.error('⚠️ WebSocket error:', error);
+                    addSystemMessage('Connection error - is Market Data service running on port 8001?', 'error');
+                };
+
+            } catch (error) {
+                console.error('Connection failed:', error);
+                addSystemMessage('Failed to connect: ' + error.message, 'error');
+            }
+        }
+
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+                updateStatus(false);
+            }
+        }
+
+        function updateStatus(connected) {
+            const statusBadge = document.getElementById('statusBadge');
+            const connectBtn = document.getElementById('connectBtn');
+            const disconnectBtn = document.getElementById('disconnectBtn');
+
+            if (connected) {
+                statusBadge.textContent = 'CONNECTED';
+                statusBadge.className = 'status-badge status-connected';
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+            } else {
+                statusBadge.textContent = 'DISCONNECTED';
+                statusBadge.className = 'status-badge status-disconnected';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+            }
+        }
+
+        function addMessage(data) {
+            const messagesDiv = document.getElementById('messages');
+            if (messagesDiv.querySelector('.no-messages')) {
+                messagesDiv.innerHTML = '';
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+
+            const now = new Date().toLocaleTimeString();
+
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <span class="message-type">${data.type || 'MESSAGE'}</span>
+                    <span class="message-time">${now}</span>
+                </div>
+                <div class="message-body">${JSON.stringify(data, null, 2)}</div>
+            `;
+
+            messagesDiv.insertBefore(messageDiv, messagesDiv.firstChild);
+            
+            // Keep only last 50 messages
+            while (messagesDiv.children.length > 50) {
+                messagesDiv.removeChild(messagesDiv.lastChild);
+            }
+        }
+
+        function addTradeMessage(trade) {
+            const messagesDiv = document.getElementById('messages');
+            if (messagesDiv.querySelector('.no-messages')) {
+                messagesDiv.innerHTML = '';
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message message-trade';
+
+            const now = new Date().toLocaleTimeString();
+
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <span class="message-type">💰 TRADE EXECUTED</span>
+                    <span class="message-time">${now}</span>
+                </div>
+                <div class="trade-highlight">
+                    <div class="trade-detail">
+                        <span class="trade-label">Trade ID:</span>
+                        <span class="trade-value">${trade.trade_id}</span>
+                    </div>
+                    <div class="trade-detail">
+                        <span class="trade-label">Symbol:</span>
+                        <span class="trade-value">${trade.symbol}</span>
+                    </div>
+                    <div class="trade-detail">
+                        <span class="trade-label">Price:</span>
+                        <span class="trade-value" style="color: #667eea; font-size: 1.2em;">$${trade.price}</span>
+                    </div>
+                    <div class="trade-detail">
+                        <span class="trade-label">Quantity:</span>
+                        <span class="trade-value" style="color: #38ef7d; font-size: 1.2em;">${trade.quantity}</span>
+                    </div>
+                    <div class="trade-detail">
+                        <span class="trade-label">Aggressor Side:</span>
+                        <span class="trade-value" style="color: ${trade.aggressor_side === 'buy' ? '#38ef7d' : '#ee0979'};">${trade.aggressor_side.toUpperCase()}</span>
+                    </div>
+                </div>
+                <div class="message-body" style="margin-top: 10px;">${JSON.stringify(trade, null, 2)}</div>
+            `;
+
+            messagesDiv.insertBefore(messageDiv, messagesDiv.firstChild);
+            
+            // Keep only last 50 messages
+            while (messagesDiv.children.length > 50) {
+                messagesDiv.removeChild(messagesDiv.lastChild);
+            }
+        }
+
+        function addSystemMessage(message, type) {
+            const messagesDiv = document.getElementById('messages');
+            if (messagesDiv.querySelector('.no-messages')) {
+                messagesDiv.innerHTML = '';
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message message-${type}`;
+
+            const now = new Date().toLocaleTimeString();
+
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <span class="message-type">SYSTEM</span>
+                    <span class="message-time">${now}</span>
+                </div>
+                <div class="message-body" style="background: ${type === 'error' ? '#ffebee' : '#e8f5e9'};">
+                    ${message}
+                </div>
+            `;
+
+            messagesDiv.insertBefore(messageDiv, messagesDiv.firstChild);
+        }
+
+        function clearMessages() {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = '<div class="no-messages">Messages cleared. Waiting for new data...</div>';
+            messageCount = 0;
+            tradeCount = 0;
+            document.getElementById('messageCount').textContent = '0';
+            document.getElementById('tradeCount').textContent = '0';
+        }
+    </script>
+</body>
+</html>
+
