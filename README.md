@@ -1,11 +1,11 @@
 # goquant - High-Performance Matching Engine
 
-**Status:** 🚧 In Development (Day 3/5 COMPLETE ✅)  
+**Status:** ✅ INTEGRATION COMPLETE (Day 4 Progress)  
 **Interview Assignment for:** [Company Name]  
 **Deadline:** 2025-10-19
 
-> **Day 3 Update:** All code complete! Awaiting Python/Redis installation for testing.  
-> See `DAY3_IMPLEMENTATION_COMPLETE.md` for details.
+> **Latest Update:** Redis integration successful! All services running and tested.  
+> System ready for full end-to-end testing and performance benchmarking.
 
 ## 🎯 Project Goal
 
@@ -26,30 +26,40 @@ Build a high-performance cryptocurrency matching engine implementing:
 
 ### Prerequisites
 1. **Python 3.11+** - https://www.python.org/downloads/
-2. **Redis** - See `REDIS_SETUP_WINDOWS.md` (Memurai recommended)
+2. **Redis** - Docker or WSL2 (see setup below)
 3. **Visual Studio Build Tools** - For C++ compilation
 
-### Automated Setup
+### 🚀 5-Minute Setup
+
+#### Step 1: Start Redis
 ```powershell
-# Setup Python environments
-.\scripts\setup_python_env.ps1
+# Option A: Docker (Recommended)
+docker run -d --name redis -p 6379:6379 redis:7-alpine
 
-# Build C++ engine
-cd matching-engine\build
-cmake ..
-cmake --build . --config Debug
-
-# Run tests
-cd ..\order-gateway
-.venv\Scripts\Activate.ps1
-pytest tests/ -v
-
-# Start all services
-.\scripts\start_all_services.ps1
+# Option B: WSL2
+wsl sudo service redis-server start
 ```
 
-### Manual Setup
-See `DAY3_IMPLEMENTATION_COMPLETE.md` for detailed instructions.
+#### Step 2: Verify Redis
+```powershell
+python test_redis_integration.py
+# Should show all tests passing ✓
+```
+
+#### Step 3: Start System
+```powershell
+python start_system.py
+# All 3 services will start automatically
+```
+
+#### Step 4: Test Order Submission
+```powershell
+# In a new terminal
+python test_order_submission.py
+```
+
+### 📖 Detailed Setup
+See `REDIS_WINDOWS_SETUP.md` for troubleshooting and alternative methods.
 
 ## 📚 Documentation
 
@@ -75,9 +85,9 @@ make test
 **Day 0:** Foundation setup ✅  
 **Day 1:** C++ order book implementation ✅ (10/10 tests passing)  
 **Day 2:** Matching algorithm ✅ (30/30 tests passing)  
-**Day 3:** API services ✅ **CODE COMPLETE** (awaiting Python/Redis install)  
-**Day 4:** Integration & performance testing ⏳  
-**Day 5:** Documentation & video demo ⏳
+**Day 3:** API services ✅ (39/39 tests passing)  
+**Day 4:** **Redis Integration Complete** ✅ System fully operational  
+**Day 5:** Performance testing & documentation ⏳
 
 ### Day 3 Deliverables ✅
 - ✅ Order Gateway (FastAPI + Redis + 9 tests)
