@@ -13,6 +13,7 @@ import json
 import sys
 import signal
 import time
+import os
 from decimal import Decimal
 from typing import Optional
 from pathlib import Path
@@ -23,10 +24,10 @@ sys.path.insert(0, str(Path(__file__).parent))
 from matching_engine import MatchingEngine, Order, Side, OrderType
 
 
-# Configuration
-REDIS_HOST = "localhost"
-REDIS_PORT = 6379
-REDIS_DB = 0
+# Configuration - Read from environment with defaults
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+REDIS_DB = int(os.getenv("REDIS_DB", "0"))
 ORDER_QUEUE = "order_queue"
 TRADE_EVENTS_CHANNEL = "trade_events"
 
@@ -95,7 +96,7 @@ def main():
         
         # Test connection
         redis_client.ping()
-        print(f"✅ Connected to Redis at {REDIS_HOST}:{REDIS_PORT}")
+        print(f"✅ Connected to Redis at {REDIS_HOST}:{REDIS_PORT} DB {REDIS_DB}")
         
     except redis.ConnectionError as e:
         print(f"❌ Failed to connect to Redis: {e}")

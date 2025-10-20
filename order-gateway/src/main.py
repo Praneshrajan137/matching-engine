@@ -43,15 +43,29 @@ async def health_check():
     Health check endpoint
 
     Returns:
-        dict: Service health status
+        dict: Service health status with queue length for observability
     """
     try:
         redis_client = get_redis_client()
         redis_client.ping()
+        
+        # Add queue length for observability
+        queue_length = redis_client.llen(ORDER_QUEUE)
+        
         logger.info(
-            "health_check ok", extra={"service": "order-gateway", "redis": "connected"}
+            "health_check ok", 
+            extra={
+                "service": "order-gateway", 
+                "redis": "connected",
+                "queue_length": queue_length
+            }
         )
-        return {"status": "healthy", "service": "order-gateway", "redis": "connected"}
+        return {
+            "status": "healthy", 
+            "service": "order-gateway", 
+            "redis": "connected",
+            "queue_length": queue_length
+        }
     except RedisConnectionError:
         logger.error("health_check failed: redis disconnected")
         return JSONResponse(
@@ -60,6 +74,7 @@ async def health_check():
                 "status": "unhealthy",
                 "service": "order-gateway",
                 "redis": "disconnected",
+                "queue_length": None
             },
         )
 

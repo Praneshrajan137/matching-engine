@@ -103,6 +103,14 @@ def wait_for_service(url, service_name, max_attempts=30):
     return False
 
 
+def get_python_interpreter(service_dir: Path) -> str:
+    """Prefer service local venv's python if available, else current interpreter"""
+    venv_python = service_dir / ".venv" / "Scripts" / "python.exe"
+    if venv_python.exists():
+        return str(venv_python)
+    return sys.executable
+
+
 def main():
     """Main startup routine"""
     print()
@@ -113,6 +121,11 @@ def main():
 
     # Get project root directory
     project_root = Path(__file__).parent
+    
+    # Get configuration from environment
+    num_workers = int(os.getenv("UVICORN_WORKERS", "4"))
+    log_level = os.getenv("LOG_LEVEL", "INFO").lower()
+    print_status(f"Configuration: {num_workers} workers, log level: {log_level.upper()}", "info")
 
     # Step 1: Check/Start Redis
     print_status("Step 1: Checking Redis", "info")
@@ -128,19 +141,25 @@ def main():
     # Step 2: Start Order Gateway
     print_status("Step 2: Starting Order Gateway (Port 8000)", "info")
     order_gateway_dir = project_root / "order-gateway"
+    og_python = get_python_interpreter(order_gateway_dir)
 
     try:
+        # Build uvicorn command with workers
+        uvicorn_cmd = [
+            og_python,
+            "-m",
+            "uvicorn",
+            "src.main:app",
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "8000",
+            "--workers", str(num_workers),
+            "--log-level", log_level,
+        ]
+        
         order_gateway_process = subprocess.Popen(
-            [
-                sys.executable,
-                "-m",
-                "uvicorn",
-                "src.main:app",
-                "--host",
-                "0.0.0.0",
-                "--port",
-                "8000",
-            ],
+            uvicorn_cmd,
             cwd=str(order_gateway_dir),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -158,14 +177,15 @@ def main():
 
     print()
 
-    # Step 3: Start Market Data Service
+# Step 3: Start Market Data Service
     print_status("Step 3: Starting Market Data Service (Port 8001)", "info")
     market_data_dir = project_root / "market-data"
+    md_python = get_python_interpreter(market_data_dir)
 
     try:
         market_data_process = subprocess.Popen(
             [
-                sys.executable,
+                md_python,
                 "-m",
                 "uvicorn",
                 "src.main:app",

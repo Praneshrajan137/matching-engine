@@ -142,6 +142,21 @@ public:
         return response.find("PONG") != std::string::npos;
     }
 
+    // SELECT: Select Redis database
+    bool select_db(int db = 0) {
+        if (socket_ == INVALID_SOCKET) {
+            return false;
+        }
+
+        std::string command = build_resp_array({"SELECT", std::to_string(db)});
+        if (send_command(command) != command.length()) {
+            return false;
+        }
+
+        std::string response = read_response();
+        return response.find("+OK") != std::string::npos;
+    }
+
 private:
     std::string host_;
     int port_;

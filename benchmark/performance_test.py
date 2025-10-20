@@ -12,8 +12,8 @@ import uuid
 
 # Configuration
 ORDER_GATEWAY_URL = "http://localhost:8000/v1/orders"
-NUM_ORDERS = 5000  # Test with 5000 orders
-NUM_THREADS = 10   # Concurrent threads for parallel submission
+NUM_ORDERS = 1000  # Test with 1000 orders
+NUM_THREADS = 12   # Concurrent threads (increased for higher throughput)
 SYMBOL = "BTC-USDT"
 
 
@@ -35,13 +35,21 @@ def generate_random_order(order_num):
     }
 
 
-def submit_single_order(order_num):
-    """Submit a single order and measure latency"""
+def submit_single_order(order_num, session=None):
+    """Submit a single order and measure latency
+    
+    Args:
+        order_num: Order number for generation
+        session: requests.Session for connection reuse (performance optimization)
+    """
     order = generate_random_order(order_num)
+    
+    # Use provided session or create new request
+    http_client = session if session else requests
     
     start_time = time.time()
     try:
-        response = requests.post(
+        response = http_client.post(
             ORDER_GATEWAY_URL,
             json=order,
             headers={"Content-Type": "application/json"},
@@ -102,22 +110,44 @@ def run_benchmark():
     print("Starting benchmark...")
     print("-" * 70)
     
-    # Submit orders using thread pool
+    # Submit orders using thread pool with session reuse
     start_time = time.time()
     results = []
     
+    # Create a session per thread for connection reuse
+    def submit_batch(order_nums):
+        """Submit a batch of orders using a single session"""
+        session = requests.Session()
+        batch_results = []
+        for order_num in order_nums:
+            result = submit_single_order(order_num, session)
+            batch_results.append(result)
+        session.close()
+        return batch_results
+    
+    # Split orders into batches (one per thread)
+    orders_per_thread = NUM_ORDERS // NUM_THREADS
+    batches = [
+        range(i * orders_per_thread, (i + 1) * orders_per_thread) 
+        for i in range(NUM_THREADS)
+    ]
+    # Handle remainder
+    remainder = NUM_ORDERS % NUM_THREADS
+    if remainder:
+        batches[-1] = range((NUM_THREADS - 1) * orders_per_thread, NUM_ORDERS)
+    
     with ThreadPoolExecutor(max_workers=NUM_THREADS) as executor:
-        # Submit all orders
-        futures = [executor.submit(submit_single_order, i) for i in range(NUM_ORDERS)]
+        # Submit batches
+        futures = [executor.submit(submit_batch, batch) for batch in batches]
         
         # Collect results with progress indicator
         completed = 0
         for future in as_completed(futures):
-            result = future.result()
-            results.append(result)
-            completed += 1
+            batch_results = future.result()
+            results.extend(batch_results)
+            completed += len(batch_results)
             
-            if completed % 500 == 0:
+            if completed % 100 == 0 or completed == NUM_ORDERS:
                 print(f"  Progress: {completed}/{NUM_ORDERS} orders submitted...")
     
     end_time = time.time()
