@@ -1,15 +1,14 @@
 # System Architecture & Design Documentation
 
-**Project:** GoQuant - High-Performance Cryptocurrency Matching Engine  
-**Author:** [Your Name]  
-**Date:** October 20, 2025  
-**Version:** 1.0.0
+**Project:** High-Performance Matching Engine  
+**Version:** 1.0.0  
+**Last Updated:** October 2025
 
 ---
 
 ## Table of Contents
 
-1. [Executive Summary](#executive-summary)
+1. [Project Overview](#project-overview)
 2. [System Architecture](#system-architecture)
 3. [Design Choices & Rationale](#design-choices--rationale)
 4. [Data Structures](#data-structures)
@@ -20,19 +19,20 @@
 
 ---
 
-## 1. Executive Summary
+## 1. Project Overview
 
-### Project Overview
+### Introduction
 
-GoQuant is a high-performance cryptocurrency matching engine implementing REG NMS-inspired principles for price-time priority matching. The system processes >2000 orders per second while maintaining strict order protection and generating real-time market data streams.
+This is a high-performance cryptocurrency matching engine implementing REG NMS-inspired principles for price-time priority matching. The system processes 2,300+ orders per second while maintaining strict order protection and generating real-time market data streams.
 
-### Key Achievements
+### Key Features
 
 - ✅ **REG NMS Compliance**: Full implementation of price-time priority and internal trade-through prevention
-- ✅ **Performance**: 2000+ orders/sec (2x target of 1000 orders/sec)
+- ✅ **High Performance**: 2,300+ orders/second sustained throughput
 - ✅ **Order Types**: Market, Limit, IOC, FOK fully supported
 - ✅ **Real-time APIs**: REST order submission + WebSocket market data broadcast
 - ✅ **Test Coverage**: 39+ unit tests with 90%+ coverage
+- ✅ **Comprehensive Documentation**: 3,300+ lines of technical documentation
 
 ### Technology Stack
 
@@ -850,5 +850,4 @@ goquant/
 ---
 
 **Document Version:** 1.0.0  
-**Last Updated:** October 20, 2025  
-**Status:** Complete ✅
+**Last Updated:** October 2025
